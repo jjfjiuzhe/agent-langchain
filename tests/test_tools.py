@@ -2,7 +2,7 @@
 
 from app.config import Settings
 from app.tools.code_tools import extract_python_symbol_chunks, list_code_files
-from app.tools.doc_tools import normalize_markdown, split_text
+from app.tools.doc_tools import normalize_markdown, split_markdown_by_headings, split_text
 
 
 def test_normalize_markdown_removes_common_markup() -> None:
@@ -14,6 +14,35 @@ def test_normalize_markdown_removes_common_markup() -> None:
     assert "docs" in text
     assert "https://example.com" not in text
     assert "hidden" not in text
+
+
+def test_split_markdown_by_headings_uses_heading_sections() -> None:
+    markdown = "# 登录审计\n总览内容\n## 数据库变更\n新增审计表\n## API 变更\n新增查询接口"
+
+    chunks = split_markdown_by_headings(markdown, chunk_size=100, chunk_overlap=10)
+
+    assert chunks == [
+        "登录审计 总览内容",
+        "登录审计 > 数据库变更 新增审计表",
+        "登录审计 > API 变更 新增查询接口",
+    ]
+
+
+def test_split_markdown_by_headings_handles_content_before_first_heading() -> None:
+    markdown = "项目简介\n# 需求\n登录审计"
+
+    chunks = split_markdown_by_headings(markdown, chunk_size=100, chunk_overlap=10)
+
+    assert chunks == ["项目简介", "需求 登录审计"]
+
+
+def test_split_markdown_by_headings_falls_back_for_large_sections() -> None:
+    markdown = "# 长章节\nabcdefghij"
+
+    chunks = split_markdown_by_headings(markdown, chunk_size=8, chunk_overlap=1)
+
+    assert len(chunks) > 1
+    assert all(chunk.startswith("长章节") for chunk in chunks)
 
 
 def test_split_text_uses_overlap() -> None:
