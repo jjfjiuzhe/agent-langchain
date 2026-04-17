@@ -1,0 +1,10 @@
+﻿fastapi
+uvicorn[standard]
+pydantic-settings
+pytest
+httpx
+psycopg[binary]
+pgvector
+langchain
+langchain-openai
+langgraph
